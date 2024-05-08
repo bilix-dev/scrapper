@@ -1,0 +1,89 @@
+{
+  "properties": [
+    {
+      "name": "silogport.url",
+      "type": "java.lang.String",
+      "description": "A description for 'silogport.url'"
+    },
+    {
+      "name": "silogport.username",
+      "type": "java.lang.String",
+      "description": "A description for 'silogport.username'"
+    },
+    {
+      "name": "silogport.password",
+      "type": "java.lang.String",
+      "description": "A description for 'silogport.password'"
+    },
+    {
+      "name": "silogport.timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'silogport.timeout'"
+    },
+    {
+      "name": "tps.url",
+      "type": "java.lang.String",
+      "description": "A description for 'tps.url'"
+    },
+    {
+      "name": "tps.username",
+      "type": "java.lang.String",
+      "description": "A description for 'tps.username'"
+    },
+    {
+      "name": "tps.password",
+      "type": "java.lang.String",
+      "description": "A description for 'tps.password'"
+    },
+    {
+      "name": "tps.timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'tps.timeout'"
+    },
+    {
+      "name": "sti.url",
+      "type": "java.lang.String",
+      "description": "A description for 'sti.url'"
+    },
+    {
+      "name": "sti.username",
+      "type": "java.lang.String",
+      "description": "A description for 'sti.username'"
+    },
+    {
+      "name": "sti.password",
+      "type": "java.lang.String",
+      "description": "A description for 'sti.password'"
+    },
+    {
+      "name": "sti.timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'sti.timeout'"
+    },
+    {
+      "name": "pc.url",
+      "type": "java.lang.String",
+      "description": "A description for 'pc.url'"
+    },
+    {
+      "name": "pc.username",
+      "type": "java.lang.String",
+      "description": "A description for 'pc.username'"
+    },
+    {
+      "name": "pc.password",
+      "type": "java.lang.String",
+      "description": "A description for 'pc.password'"
+    },
+    {
+      "name": "pc.timeout",
+      "type": "java.lang.String",
+      "description": "A description for 'pc.timeout'"
+    },
+    {
+      "name": "ws.origin",
+      "type": "java.lang.String",
+      "description": "A description for 'ws.origin'"
+    }
+  ]
+}
