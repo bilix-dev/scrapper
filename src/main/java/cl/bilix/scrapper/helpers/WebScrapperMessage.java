@@ -3,9 +3,10 @@ package cl.bilix.scrapper.helpers;
 public enum WebScrapperMessage {
 
     SUCCESS(0, "Procedimiento realizado con exito"),
-    UNAUTHORIZED(1, "Credenciales incorrectas"),
-    UNINMPLEMENTED(2, "Terminal no implementado"),
-    ERROR(3, "Error general");
+    ERROR(1, "Error general"),
+    UNAUTHORIZED(2, "Credenciales incorrectas"),
+    UNINMPLEMENTED(3, "Terminal no implementado"),
+    PROCCESSING(4, "Contenedor se esta procesando");
 
     private String message;
     private int code;

@@ -1,5 +1,7 @@
 package cl.bilix.scrapper.helpers;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import lombok.Data;
@@ -17,8 +19,8 @@ public class WebScrapperResult {
         this.message = webScrapperMessage.getMessage();
     }
 
-    public WebScrapperResult(WebScrapperMessage webScrapperMessage, String cause) {
+    public WebScrapperResult(WebScrapperMessage webScrapperMessage, Throwable error) {
         this(webScrapperMessage);
-        this.cause = cause;
+        this.cause = ExceptionUtils.getStackTrace(error);
     }
 }

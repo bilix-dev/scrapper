@@ -1,14 +1,12 @@
 package cl.bilix.scrapper.helpers;
 
-import org.springframework.util.ObjectUtils;
-
 public class WebScrapperException extends RuntimeException {
 
     private final WebScrapperMessage message;
 
     public WebScrapperResult getErrorResult() {
         return new WebScrapperResult(message,
-                !ObjectUtils.isEmpty(this.getCause()) ? this.getCause().getMessage() : null);
+                this);
     }
 
     public WebScrapperException(WebScrapperMessage webScrapperMessage) {

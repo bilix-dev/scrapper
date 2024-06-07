@@ -11,10 +11,10 @@ import lombok.Data;
 public class Properties {
     @NotNull
     private String url;
-    @NotNull
-    private String username;
-    @NotNull
-    private String password;
+    // @NotNull
+    // private String username;
+    // @NotNull
+    // private String password;
     @NumberFormat
     @NotNull
     private int timeout;
