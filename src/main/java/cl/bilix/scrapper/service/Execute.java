@@ -11,6 +11,7 @@ import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -22,7 +23,9 @@ import cl.bilix.scrapper.helpers.WebScrapperMessage;
 
 public class Execute {
     public static void apply(Input input) throws WebScrapperException, Exception {
-        WebDriver driver = new ChromeDriver();
+        ChromeOptions options = new ChromeOptions();
+        options.addArguments("--headless");
+        WebDriver driver = new ChromeDriver(options);
         try {
             driver.get(input.getUrl());
             // driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(input.getTimeout()));

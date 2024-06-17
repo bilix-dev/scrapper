@@ -13,5 +13,5 @@ import lombok.Data;
 @Validated
 public class WebSocketProperties {
     @NotNull
-    private String origin;
+    private String[] origins;
 }

@@ -81,9 +81,9 @@
       "description": "A description for 'pc.timeout'"
     },
     {
-      "name": "ws.origin",
+      "name": "ws.origins",
       "type": "java.lang.String",
-      "description": "A description for 'ws.origin'"
+      "description": "A description for 'ws.origins'"
     }
   ]
 }

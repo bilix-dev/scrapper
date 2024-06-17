@@ -13,10 +13,17 @@
 	<version>0.0.1-SNAPSHOT</version>
 	<name>scrapper</name>
 	<description>Demo project for Spring Boot</description>
+	<packaging>war</packaging>
 	<properties>
 		<java.version>21</java.version>
 	</properties>
 	<dependencies>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-tomcat</artifactId>
+			<scope>provided</scope>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -39,16 +46,16 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>4.19.1</version>
-        </dependency>		
+		<dependency>
+			<groupId>org.seleniumhq.selenium</groupId>
+			<artifactId>selenium-java</artifactId>
+			<version>4.21.0</version>
+		</dependency>	
 
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<scope>annotationProcessor</scope>
+			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -74,10 +81,23 @@
 	</dependencies>
 
 	<build>
+		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+    			<groupId>org.apache.tomcat.maven</groupId>
+    			<artifactId>tomcat7-maven-plugin</artifactId>
+    			<version>2.2</version>
+    			<configuration>
+					<update>true</update>
+        			<url>https://bilix.ddns.net:8443/manager/text</url>
+        			<path>/${project.artifactId}</path>
+					<username>manager</username>
+					<password>canario321ab?</password>
+    			</configuration>
 			</plugin>
 		</plugins>
 	</build>
