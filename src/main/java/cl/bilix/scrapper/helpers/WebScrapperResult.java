@@ -10,6 +10,7 @@ import lombok.Data;
 public class WebScrapperResult {
     private Object code;
     private Object message;
+    private Object screenshot;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Object cause;
@@ -17,6 +18,11 @@ public class WebScrapperResult {
     public WebScrapperResult(WebScrapperMessage webScrapperMessage) {
         this.code = webScrapperMessage.getCode();
         this.message = webScrapperMessage.getMessage();
+    }
+
+    public WebScrapperResult(WebScrapperMessage webScrapperMessage, String screenshot) {
+        this(webScrapperMessage);
+        this.screenshot = screenshot;
     }
 
     public WebScrapperResult(WebScrapperMessage webScrapperMessage, Throwable error) {

@@ -12,4 +12,21 @@ public class Payload {
     private String container;
     @NotNull
     private String booking;
+
+    // TRANSPORTISTA
+    @NotNull
+    private String gd;
+    @NotNull
+    private String micdta;
+    @NotNull
+    private String seal;
+
+    // CONTENEDOR
+    private String dispatcherRut;
+    private String clientRut;
+    private String weight;
+    private String vgmWeight;
+    private String shippingCompany;
+    private String businessName;
+    private String operation;
 }

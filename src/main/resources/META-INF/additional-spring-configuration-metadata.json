@@ -84,6 +84,31 @@
       "name": "ws.origins",
       "type": "java.lang.String",
       "description": "A description for 'ws.origins'"
+    },
+    {
+      "name": "general.headless",
+      "type": "java.lang.String",
+      "description": "A description for 'general.headless'"
+    },
+    {
+      "name": "sti.end",
+      "type": "java.lang.String",
+      "description": "A description for 'sti.end'"
+    },
+    {
+      "name": "tps.end",
+      "type": "java.lang.String",
+      "description": "A description for 'tps.end'"
+    },
+    {
+      "name": "pc.end",
+      "type": "java.lang.String",
+      "description": "A description for 'pc.end'"
+    },
+    {
+      "name": "silogport.end",
+      "type": "java.lang.String",
+      "description": "A description for 'silogport.end'"
     }
   ]
 }

@@ -16,4 +16,6 @@ public class Input {
     // Injectables
     private String url;
     private int timeout;
+    private boolean headless;
+    private boolean end;
 }

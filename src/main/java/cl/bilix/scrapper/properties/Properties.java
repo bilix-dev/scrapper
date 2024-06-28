@@ -19,4 +19,6 @@ public class Properties {
     @NotNull
     private int timeout;
     private String map;
+    @NotNull
+    private boolean end;
 }

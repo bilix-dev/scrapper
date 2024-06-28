@@ -6,13 +6,17 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -22,117 +26,363 @@ import cl.bilix.scrapper.helpers.WebScrapperException;
 import cl.bilix.scrapper.helpers.WebScrapperMessage;
 
 public class Execute {
-    public static void apply(Input input) throws WebScrapperException, Exception {
-        ChromeOptions options = new ChromeOptions();
-        options.addArguments("--headless");
-        WebDriver driver = new ChromeDriver(options);
-        try {
-            driver.get(input.getUrl());
-            // driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(input.getTimeout()));
-            switch (input.getTerminal()) {
-                case Terminal.PC -> pc(driver, input);
-                case Terminal.STI -> sti(driver, input);
-                case Terminal.SILOGPORT -> silogport(driver, input);
-                case Terminal.TPS -> tps(driver, input);
-                default -> throw new WebScrapperException(WebScrapperMessage.UNINMPLEMENTED);
-            }
-            ;
-        } finally {
-            driver.quit();
+        public static String apply(Input input) throws WebScrapperException, Exception {
+                ChromeOptions options = new ChromeOptions();
+                if (input.isHeadless()) {
+                        options.addArguments("--headless");
+                }
+                WebDriver driver = new ChromeDriver(options);
+                try {
+                        driver.get(input.getUrl());
+                        switch (input.getTerminal()) {
+                                case Terminal.PC -> pc(driver, input);
+                                case Terminal.STI -> sti(driver, input);
+                                // case Terminal.SILOGPORT -> silogport(driver, input);
+                                // case Terminal.TPS -> tps(driver, input);
+                                default -> throw new WebScrapperException(WebScrapperMessage.UNINMPLEMENTED);
+                        }
+                        ;
+                        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
+                } finally {
+                        driver.quit();
+                }
         }
-    }
 
-    private static void pc(WebDriver driver, Input input)
-            throws WebScrapperException, Exception {
+        private static void pc(WebDriver driver, Input input)
+                        throws WebScrapperException, Exception {
 
-        Wait<WebDriver> wait = new WebDriverWait(driver,
-                Duration.ofSeconds(input.getTimeout()));
+                final String TARIFF_CODE = "220421";
 
-        // try {
+                Wait<WebDriver> wait = new WebDriverWait(driver,
+                                Duration.ofSeconds(input.getTimeout()));
 
-        // } catch (TimeoutException e) {
-        // throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
+                Wait<WebDriver> wait_modal = new WebDriverWait(driver,
+                                Duration.ofSeconds(60));
+
+                final WebElement form = driver.findElement(By.name("loginForm"));
+
+                final WebElement userName = form.findElement(By.name("username"));
+                final WebElement password = form.findElement(By.name("password"));
+                final WebElement submitButton = form.findElement(By.xpath("//button[@type='submit']"));
+
+                // INGRESO
+                userName.sendKeys(input.getUserName());
+                password.sendKeys(input.getPassword());
+                submitButton.click();
+
+                // COMPROBAR LOGIN EXITOSO
+                try {
+                        final List<WebElement> errors = new ArrayList<WebElement>(
+                                        Arrays.asList(driver.findElement(
+                                                        By.xpath("//div[@ng-show='authenticationDisabledError']")),
+                                                        driver
+                                                                        .findElement(
+                                                                                        By.xpath(
+                                                                                                        "//div[@ng-show='authenticationError && !authenticationRetries']")),
+                                                        driver
+                                                                        .findElement(
+                                                                                        By.xpath(
+                                                                                                        "//div[@ng-show='authenticationError && authenticationRetries']"))));
+                        errors.forEach(error -> wait.until(ExpectedConditions.stalenessOf(error)));
+                        // PANTALLA DE CAMBIO DE PASSWORD
+                        wait.until(ExpectedConditions
+                                        .not(ExpectedConditions.visibilityOfElementLocated(
+                                                        By.xpath("//div[@ng-show='changePassError']"))));
+
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
+                }
+
+                try {
+                        // PESTAÑA EXPORTACION
+                        final By exports_path = By.xpath("//a[@ui-sref='exports']");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(exports_path));
+                        final WebElement exportAnchor = driver.findElement(exports_path);
+                        exportAnchor.sendKeys(Keys.ENTER);
+
+                        // TIPEAR CONTENEDOR
+                        final By container_path = By.id("containerSearch");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(container_path));
+                        final WebElement container = driver.findElement(container_path);
+                        container.sendKeys(input.getPayload().getContainer());
+                        container.sendKeys(Keys.ENTER);
+
+                        // COMPROBAR BOOKING
+                        final By booking_path = By.id("booking");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(booking_path));
+                        final WebElement booking = driver.findElement(booking_path);
+                        booking.sendKeys(input.getPayload().getBooking());
+                        booking.sendKeys(Keys.ENTER);
+
+                        wait_modal
+                                        .until(ExpectedConditions.invisibilityOfElementLocated(
+                                                        By.xpath("//div[@modal-render='true']")));
+
+                        // COMPROBAR SHIPPER
+                        final By shipper_path = By.name("shipperId");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(shipper_path));
+                        final WebElement shipper = driver.findElement(shipper_path);
+                        shipper.sendKeys(input.getPayload().getClientRut());
+                        shipper.sendKeys(Keys.ENTER);
+
+                        // TIPO CONTENEDOR
+                        final By type_path = By.xpath("//select[@ng-model='booking.item']");
+                        final WebElement type = driver.findElement(type_path);
+                        Select select = new Select(type);
+
+                        // OBTENER LA PRIMERA OPCION
+                        select.getOptions().get(1).click();
+
+                        final WebElement weight = driver.findElement(By.name("grossweight"));
+                        weight.sendKeys(input.getPayload().getWeight());
+
+                        final WebElement tariff = driver.findElement(By.name("commodity"));
+                        tariff.sendKeys(TARIFF_CODE);
+
+                        // ESPERAR A QUE SE OCULTE EL MODAL
+                        wait_modal
+                                        .until(ExpectedConditions.invisibilityOfElementLocated(
+                                                        By.xpath("//div[@modal-render='true']")));
+
+                        final WebElement vgm = driver.findElement(By.id("radioVgm"));
+                        vgm.click();
+
+                        final WebElement micdta = driver.findElement(By.xpath("//input[@value='MICDTA']"));
+                        micdta.click();
+
+                        // final WebElement tipo_doc = driver.findElement(By.name("tipoDoc"));
+                        final WebElement tipoo_doc = driver
+                                        .findElement(By.xpath(
+                                                        "//tags-input[@name='tipoDoc']//input[@ng-model='newTag.text']"));
+                        tipoo_doc.sendKeys(input.getPayload().getMicdta());
+                        tipoo_doc.sendKeys(Keys.ENTER);
+
+                        final WebElement gd = driver
+                                        .findElement(By.xpath(
+                                                        "//tags-input[@name='guia']//input[@ng-model='newTag.text']"));
+                        gd.sendKeys(input.getPayload().getMicdta());
+                        gd.sendKeys(Keys.ENTER);
+
+                        final WebElement inspeccion = driver.findElement(By.xpath("//input[@value='SIN INSPECCION']"));
+                        inspeccion.click();
+
+                        final WebElement seal = driver
+                                        .findElement(By.xpath(
+                                                        "//tags-input[@name='seals']//input[@ng-model='newTag.text']"));
+                        seal.sendKeys(input.getPayload().getSeal());
+                        seal.sendKeys(Keys.ENTER);
+
+                        final WebElement truckingExport = driver
+                                        .findElement(By.name("truckingExport"));
+
+                        truckingExport.sendKeys(input.getPayload().getDispatcherRut());
+                        truckingExport.sendKeys(Keys.ENTER);
+
+                        final WebElement security = driver.findElement(By.name("uniqueInvoice"));
+                        security.click();
+
+                        final WebElement prealert = driver
+                                        .findElement(By.xpath("//button[@ng-click='openVGMModal()']"));
+                        prealert.click();
+
+                        // FINALIZAR PROCESO
+                        if (input.isEnd()) {
+                                final By end_path = By.id("aceptModal");
+                                wait.until(ExpectedConditions.visibilityOfElementLocated(end_path));
+                                final WebElement end = driver.findElement(end_path);
+                                end.click();
+                                wait_modal
+                                                .until(ExpectedConditions.invisibilityOfElementLocated(
+                                                                By.xpath("//div[@modal-render='true']")));
+                        }
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.ERROR, e);
+                }
+        }
+
+        private static void sti(WebDriver driver, Input input) throws WebScrapperException, Exception {
+
+                Wait<WebDriver> wait = new WebDriverWait(driver,
+                                Duration.ofSeconds(input.getTimeout()));
+
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+
+                try {
+                        final By form_path = By.name("formulario");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
+                        // INGRESO
+                        final WebElement form = driver.findElement(form_path);
+                        final WebElement userName = form.findElement(By.name("userd"));
+                        final WebElement password = form.findElement(By.name("pass"));
+                        final WebElement submitButton = form.findElement(By.name("accion2"));
+                        userName.sendKeys(input.getUserName());
+                        password.sendKeys(input.getPassword());
+                        submitButton.submit();
+
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
+                }
+
+                try {
+                        final WebElement visar = driver
+                                        .findElement(By.xpath("//a[contains(text(),'Visar contenedor')]"));
+
+                        driver.get(visar.getAttribute("href"));
+
+                        final By booking_path = By.id("reserva");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(booking_path));
+
+                        final WebElement booking = driver.findElement(booking_path);
+
+                        booking.sendKeys(input.getPayload().getBooking());
+
+                        final WebElement buscar = driver.findElement(By.name("Buscar"));
+                        buscar.submit();
+
+                        final By nav_path = By
+                                        .xpath("//td[contains(text(),'" + input.getPayload().getOperation()
+                                                        + "')]/./..");
+
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(nav_path));
+                        // INGRESO
+                        final WebElement nav_tr = driver.findElement(nav_path);
+                        final WebElement nav = nav_tr.findElement(By.xpath("td/a"));
+                        driver.get(nav.getAttribute("href"));
+
+                        final By nv_path = By
+                                        .xpath("//td//a[contains(text(),'" + input.getPayload().getShippingCompany()
+                                                        + "')]");
+
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(nv_path));
+                        final WebElement nv = driver.findElement(nv_path);
+                        driver.get(nv.getAttribute("href"));
+
+                        final By visacion_path = By.xpath("//td/a");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(visacion_path));
+                        final WebElement visacion = driver.findElement(visacion_path);
+                        driver.get(visacion.getAttribute("href"));
+
+                        final By table_path = By.id("tbody_visados");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(table_path));
+                        // tbody_visados
+                        final WebElement table = driver.findElement(table_path);
+
+                        final WebElement table_item = table.findElement(By.xpath("tr//td[text()=' 0-']"));
+                        js.executeScript("arguments[0].click();", table_item);
+
+                        final By form_path = By.id("form1");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
+
+                        final WebElement cod_sigla = driver.findElement(By.id("cod_sigla"));
+                        final WebElement cod_numero = driver.findElement(By.id("cod_numero"));
+                        final WebElement cod_digito = driver.findElement(By.id("cod_digito"));
+                        final WebElement cnt_guardar = driver.findElement(By.id("Guardar"));
+
+                        final String sigla = input.getPayload().getContainer().substring(0, 4);
+                        final String numero = input.getPayload().getContainer().substring(4, 10);
+                        final String digito = input.getPayload().getContainer().substring(10, 11);
+
+                        cod_sigla.sendKeys(sigla);
+                        cod_numero.sendKeys(numero);
+                        cod_digito.sendKeys(digito);
+                        cnt_guardar.click();
+
+                        final By peso_neto_path = By.id("peso_neto");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(peso_neto_path));
+
+                        final WebElement peso_neto = driver.findElement(peso_neto_path);
+                        peso_neto.sendKeys(input.getPayload().getWeight());
+
+                        final WebElement patente = driver.findElement(By.id("patente"));
+                        patente.sendKeys("XXX");
+
+                        final WebElement seal = driver.findElement(By.id("dw_sellos"));
+                        seal.sendKeys(input.getPayload().getSeal());
+
+                        final WebElement seal_btn = driver.findElement(By.id("EnviarSellos"));
+                        seal_btn.click();
+
+                        final WebElement type = driver.findElement(By.id("eligeDoc"));
+                        Select select = new Select(type);
+                        select.getOptions().get(8).click();
+
+                        final WebElement dw_micdta = driver.findElement(By.id("dw_dus"));
+                        dw_micdta.sendKeys(input.getPayload().getMicdta());
+
+                        final WebElement dw_micdta_btn = driver.findElement(By.id("EnviarDus"));
+                        dw_micdta_btn.click();
+
+                        final WebElement dw_guia = driver.findElement(By.id("dw_guia"));
+                        dw_guia.sendKeys(input.getPayload().getGd());
+
+                        final WebElement dw_guia_btn = driver.findElement(By.id("EnviarGuia"));
+                        dw_guia_btn.click();
+
+                        final WebElement rut_factura = driver.findElement(By.id("rut_factura"));
+
+                        final String rut = input.getPayload().getClientRut().substring(0,
+                                        input.getPayload().getClientRut().length() - 1);
+
+                        final String dv = input.getPayload().getClientRut()
+                                        .substring(input.getPayload().getClientRut().length() - 1);
+
+                        rut_factura.sendKeys(rut + "-" + dv);
+
+                        final WebElement rut_btn = driver
+                                        .findElement(By.xpath("//div[@class='facturacion_visa_expo_body']/button"));
+                        rut_btn.click();
+
+                        final WebElement checkverificado = driver.findElement(By.id("checkverificado"));
+                        checkverificado.click();
+
+                        final WebElement peso_verificado = driver.findElement(By.id("peso_verificado"));
+                        peso_verificado.sendKeys(input.getPayload().getVgmWeight());
+
+                        final WebElement checkmetodo2 = driver.findElement(By.id("checkmetodo2"));
+                        checkmetodo2.click();
+
+                        final WebElement flg_emp_pesa_extranjera = driver.findElement(By.id("flg_emp_pesa_extranjera"));
+                        flg_emp_pesa_extranjera.click();
+
+                        final WebElement nombre_empresa_pesaje = driver.findElement(By.id("nombre_empresa_pesaje"));
+                        nombre_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
+
+                        final WebElement rep_empresa_pesaje = driver.findElement(By.id("rep_empresa_pesaje"));
+                        rep_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
+
+                        final WebElement checkacepto = driver.findElement(By.id("checkacepto"));
+                        js.executeScript("arguments[0].click();", checkacepto);
+
+                        if (input.isEnd()) {
+                                final WebElement save = driver.findElement(
+                                                By.xpath("//input[@id='Guardar' and @value='Guardar']"));
+                                js.executeScript("arguments[0].click();", save);
+                        }
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.ERROR, e);
+                }
+
+        }
+
+        // private static void silogport(WebDriver driver, Input input) {
+        // final WebElement form = driver.findElement(By.id("kc-form"));
+        // final WebElement userName = form.findElement(By.name("username"));
+        // final WebElement password = form.findElement(By.name("password"));
+        // final WebElement submitButton = form.findElement(By.name("login"));
+        // // INGRESO
+        // userName.sendKeys(input.getUserName());
+        // password.sendKeys(input.getPassword());
+        // submitButton.submit();
         // }
 
-        final WebElement form = driver.findElement(By.name("loginForm"));
-
-        final WebElement userName = form.findElement(By.name("username"));
-        final WebElement password = form.findElement(By.name("password"));
-        final WebElement submitButton = form.findElement(By.xpath("//button[@type='submit']"));
-
-        // INGRESO
-        userName.sendKeys(input.getUserName());
-        password.sendKeys(input.getPassword());
-        submitButton.click();
-
-        // COMPROBAR LOGIN EXITOSO
-        try {
-            final List<WebElement> errors = new ArrayList<WebElement>(
-                    Arrays.asList(driver.findElement(By.xpath("//div[@ng-show='authenticationDisabledError']")),
-                            driver
-                                    .findElement(
-                                            By.xpath(
-                                                    "//div[@ng-show='authenticationError && !authenticationRetries']")),
-                            driver
-                                    .findElement(
-                                            By.xpath(
-                                                    "//div[@ng-show='authenticationError && authenticationRetries']"))));
-            errors.forEach(error -> wait.until(ExpectedConditions.stalenessOf(error)));
-        } catch (TimeoutException e) {
-            throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
-        }
-
-        // PESTAÑA EXPORTACION
-        final WebElement exportAnchor = driver.findElement(By.xpath("//a[@ui-sref='exports']"));
-        exportAnchor.sendKeys(Keys.ENTER);
-
-        // TIPEAR CONTENEDOR
-        final WebElement container = driver.findElement(By.id("containerSearch"));
-        container.sendKeys(input.getPayload().getContainer() + Keys.ENTER);
-
-        // COMPROBAR CONTENEDOR
-        try {
-            wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//p[text()='Nuevo Preaviso']")));
-        } catch (TimeoutException e) {
-            throw new WebScrapperException(WebScrapperMessage.ERROR, e);
-        }
-
-        final WebElement expoForm = driver.findElement(By.name("expoForm"));
-        final WebElement booking = expoForm.findElement(By.name("booking"));
-        booking.sendKeys(input.getPayload().getBooking() + Keys.ENTER);
-
-    }
-
-    private static void sti(WebDriver driver, Input input) {
-        final WebElement form = driver.findElement(By.name("formulario"));
-        final WebElement userName = form.findElement(By.name("userd"));
-        final WebElement password = form.findElement(By.name("pass"));
-        final WebElement submitButton = form.findElement(By.name("accion2"));
-        // INGRESO
-        userName.sendKeys(input.getUserName());
-        password.sendKeys(input.getPassword());
-        submitButton.submit();
-    }
-
-    private static void silogport(WebDriver driver, Input input) {
-        final WebElement form = driver.findElement(By.id("kc-form"));
-        final WebElement userName = form.findElement(By.name("username"));
-        final WebElement password = form.findElement(By.name("password"));
-        final WebElement submitButton = form.findElement(By.name("login"));
-        // INGRESO
-        userName.sendKeys(input.getUserName());
-        password.sendKeys(input.getPassword());
-        submitButton.submit();
-    }
-
-    private static void tps(WebDriver driver, Input input) {
-        final WebElement form = driver.findElement(By.id("tps_login_form"));
-        final WebElement userName = form.findElement(By.name("correo"));
-        final WebElement password = form.findElement(By.name("clave"));
-        final WebElement submitButton = form.findElement(By.id("tps_login_button"));
-        // INGRESO
-        userName.sendKeys(input.getUserName());
-        password.sendKeys(input.getPassword());
-        submitButton.submit();
-    }
+        // private static void tps(WebDriver driver, Input input) {
+        // final WebElement form = driver.findElement(By.id("tps_login_form"));
+        // final WebElement userName = form.findElement(By.name("correo"));
+        // final WebElement password = form.findElement(By.name("clave"));
+        // final WebElement submitButton = form.findElement(By.id("tps_login_button"));
+        // // INGRESO
+        // userName.sendKeys(input.getUserName());
+        // password.sendKeys(input.getPassword());
+        // submitButton.submit();
+        // }
 }

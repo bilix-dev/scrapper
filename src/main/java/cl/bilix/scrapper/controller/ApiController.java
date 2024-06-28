@@ -16,6 +16,7 @@ import cl.bilix.scrapper.helpers.Locker;
 import cl.bilix.scrapper.helpers.WebScrapperException;
 import cl.bilix.scrapper.helpers.WebScrapperMessage;
 import cl.bilix.scrapper.helpers.WebScrapperResult;
+import cl.bilix.scrapper.properties.GeneralProperties;
 import cl.bilix.scrapper.properties.Properties;
 import cl.bilix.scrapper.service.Execute;
 
@@ -25,11 +26,16 @@ public class ApiController {
 
     // Properties
     private final List<Properties> properties;
+    // Properties
+    private final GeneralProperties generalProperties;
+
     // Mutex para la sección critica, singleton
     private final Locker locker = Locker.getInstance();
 
-    public ApiController(List<Properties> properties, SimpMessagingTemplate template) {
+    public ApiController(List<Properties> properties, GeneralProperties generalProperties,
+            SimpMessagingTemplate template) {
         this.properties = properties;
+        this.generalProperties = generalProperties;
         // Inicializa los mutex correspondientes
         properties.forEach(property -> locker.add(property.getMap(), template));
     }
@@ -53,8 +59,10 @@ public class ApiController {
             // Injectar Propiedades a input
             input.setUrl(properties.getUrl());
             input.setTimeout(properties.getTimeout());
-            Execute.apply(input);
-            return new ResponseEntity<Object>(new WebScrapperResult(WebScrapperMessage.SUCCESS),
+            input.setHeadless(generalProperties.isHeadless());
+            input.setEnd(properties.isEnd());
+            String screenshot = Execute.apply(input);
+            return new ResponseEntity<Object>(new WebScrapperResult(WebScrapperMessage.SUCCESS, screenshot),
                     HttpStatus.CREATED);
         } catch (WebScrapperException e) {
             return new ResponseEntity<Object>(e.getErrorResult(), HttpStatus.BAD_REQUEST);
