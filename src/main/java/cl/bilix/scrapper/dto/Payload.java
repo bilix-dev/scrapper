@@ -12,14 +12,16 @@ public class Payload {
     private String container;
     @NotNull
     private String booking;
+    private String tariffCode;
 
     // TRANSPORTISTA
-    @NotNull
     private String gd;
-    @NotNull
     private String micdta;
-    @NotNull
     private String seal;
+    private String dni;
+    private String plateNumber;
+    private String country;
+    private String plateNumberCountry;
 
     // CONTENEDOR
     private String dispatcherRut;
@@ -29,4 +31,7 @@ public class Payload {
     private String shippingCompany;
     private String businessName;
     private String operation;
+    private String ship;
+    private String custom;
+    private String containerType;
 }

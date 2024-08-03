@@ -37,8 +37,8 @@ public class Execute {
                         switch (input.getTerminal()) {
                                 case Terminal.PC -> pc(driver, input);
                                 case Terminal.STI -> sti(driver, input);
-                                // case Terminal.SILOGPORT -> silogport(driver, input);
-                                // case Terminal.TPS -> tps(driver, input);
+                                case Terminal.SILOGPORT -> silogport(driver, input);
+                                case Terminal.TPS -> tps(driver, input);
                                 default -> throw new WebScrapperException(WebScrapperMessage.UNINMPLEMENTED);
                         }
                         ;
@@ -51,7 +51,7 @@ public class Execute {
         private static void pc(WebDriver driver, Input input)
                         throws WebScrapperException, Exception {
 
-                final String TARIFF_CODE = "220421";
+                JavascriptExecutor js = (JavascriptExecutor) driver;
 
                 Wait<WebDriver> wait = new WebDriverWait(driver,
                                 Duration.ofSeconds(input.getTimeout()));
@@ -68,7 +68,7 @@ public class Execute {
                 // INGRESO
                 userName.sendKeys(input.getUserName());
                 password.sendKeys(input.getPassword());
-                submitButton.click();
+                js.executeScript("arguments[0].click();", submitButton);
 
                 // COMPROBAR LOGIN EXITOSO
                 try {
@@ -124,20 +124,18 @@ public class Execute {
                         final WebElement shipper = driver.findElement(shipper_path);
                         shipper.sendKeys(input.getPayload().getClientRut());
                         shipper.sendKeys(Keys.ENTER);
-
                         // TIPO CONTENEDOR
                         final By type_path = By.xpath("//select[@ng-model='booking.item']");
                         final WebElement type = driver.findElement(type_path);
-                        Select select = new Select(type);
 
-                        // OBTENER LA PRIMERA OPCION
+                        Select select = new Select(type);
                         select.getOptions().get(1).click();
 
                         final WebElement weight = driver.findElement(By.name("grossweight"));
                         weight.sendKeys(input.getPayload().getWeight());
 
                         final WebElement tariff = driver.findElement(By.name("commodity"));
-                        tariff.sendKeys(TARIFF_CODE);
+                        tariff.sendKeys(input.getPayload().getTariffCode());
 
                         // ESPERAR A QUE SE OCULTE EL MODAL
                         wait_modal
@@ -145,10 +143,10 @@ public class Execute {
                                                         By.xpath("//div[@modal-render='true']")));
 
                         final WebElement vgm = driver.findElement(By.id("radioVgm"));
-                        vgm.click();
+                        js.executeScript("arguments[0].click();", vgm);
 
                         final WebElement micdta = driver.findElement(By.xpath("//input[@value='MICDTA']"));
-                        micdta.click();
+                        js.executeScript("arguments[0].click();", micdta);
 
                         // final WebElement tipo_doc = driver.findElement(By.name("tipoDoc"));
                         final WebElement tipoo_doc = driver
@@ -164,7 +162,7 @@ public class Execute {
                         gd.sendKeys(Keys.ENTER);
 
                         final WebElement inspeccion = driver.findElement(By.xpath("//input[@value='SIN INSPECCION']"));
-                        inspeccion.click();
+                        js.executeScript("arguments[0].click();", inspeccion);
 
                         final WebElement seal = driver
                                         .findElement(By.xpath(
@@ -179,18 +177,18 @@ public class Execute {
                         truckingExport.sendKeys(Keys.ENTER);
 
                         final WebElement security = driver.findElement(By.name("uniqueInvoice"));
-                        security.click();
+                        js.executeScript("arguments[0].click();", security);
 
                         final WebElement prealert = driver
                                         .findElement(By.xpath("//button[@ng-click='openVGMModal()']"));
-                        prealert.click();
+                        js.executeScript("arguments[0].click();", prealert);
 
                         // FINALIZAR PROCESO
                         if (input.isEnd()) {
                                 final By end_path = By.id("aceptModal");
                                 wait.until(ExpectedConditions.visibilityOfElementLocated(end_path));
                                 final WebElement end = driver.findElement(end_path);
-                                end.click();
+                                js.executeScript("arguments[0].click();", end);
                                 wait_modal
                                                 .until(ExpectedConditions.invisibilityOfElementLocated(
                                                                 By.xpath("//div[@modal-render='true']")));
@@ -285,7 +283,7 @@ public class Execute {
                         cod_sigla.sendKeys(sigla);
                         cod_numero.sendKeys(numero);
                         cod_digito.sendKeys(digito);
-                        cnt_guardar.click();
+                        js.executeScript("arguments[0].click();", cnt_guardar);
 
                         final By peso_neto_path = By.id("peso_neto");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(peso_neto_path));
@@ -300,7 +298,7 @@ public class Execute {
                         seal.sendKeys(input.getPayload().getSeal());
 
                         final WebElement seal_btn = driver.findElement(By.id("EnviarSellos"));
-                        seal_btn.click();
+                        js.executeScript("arguments[0].click();", seal_btn);
 
                         final WebElement type = driver.findElement(By.id("eligeDoc"));
                         Select select = new Select(type);
@@ -310,13 +308,13 @@ public class Execute {
                         dw_micdta.sendKeys(input.getPayload().getMicdta());
 
                         final WebElement dw_micdta_btn = driver.findElement(By.id("EnviarDus"));
-                        dw_micdta_btn.click();
+                        js.executeScript("arguments[0].click();", dw_micdta_btn);
 
                         final WebElement dw_guia = driver.findElement(By.id("dw_guia"));
                         dw_guia.sendKeys(input.getPayload().getGd());
 
                         final WebElement dw_guia_btn = driver.findElement(By.id("EnviarGuia"));
-                        dw_guia_btn.click();
+                        js.executeScript("arguments[0].click();", dw_guia_btn);
 
                         final WebElement rut_factura = driver.findElement(By.id("rut_factura"));
 
@@ -330,19 +328,20 @@ public class Execute {
 
                         final WebElement rut_btn = driver
                                         .findElement(By.xpath("//div[@class='facturacion_visa_expo_body']/button"));
-                        rut_btn.click();
+                        js.executeScript("arguments[0].click();", rut_btn);
 
                         final WebElement checkverificado = driver.findElement(By.id("checkverificado"));
-                        checkverificado.click();
+                        js.executeScript("arguments[0].click();", checkverificado);
+                        ;
 
                         final WebElement peso_verificado = driver.findElement(By.id("peso_verificado"));
                         peso_verificado.sendKeys(input.getPayload().getVgmWeight());
 
                         final WebElement checkmetodo2 = driver.findElement(By.id("checkmetodo2"));
-                        checkmetodo2.click();
+                        js.executeScript("arguments[0].click();", checkmetodo2);
 
                         final WebElement flg_emp_pesa_extranjera = driver.findElement(By.id("flg_emp_pesa_extranjera"));
-                        flg_emp_pesa_extranjera.click();
+                        js.executeScript("arguments[0].click();", flg_emp_pesa_extranjera);
 
                         final WebElement nombre_empresa_pesaje = driver.findElement(By.id("nombre_empresa_pesaje"));
                         nombre_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
@@ -364,25 +363,191 @@ public class Execute {
 
         }
 
-        // private static void silogport(WebDriver driver, Input input) {
-        // final WebElement form = driver.findElement(By.id("kc-form"));
-        // final WebElement userName = form.findElement(By.name("username"));
-        // final WebElement password = form.findElement(By.name("password"));
-        // final WebElement submitButton = form.findElement(By.name("login"));
-        // // INGRESO
-        // userName.sendKeys(input.getUserName());
-        // password.sendKeys(input.getPassword());
-        // submitButton.submit();
-        // }
+        private static void silogport(WebDriver driver, Input input) throws WebScrapperException, Exception {
 
-        // private static void tps(WebDriver driver, Input input) {
-        // final WebElement form = driver.findElement(By.id("tps_login_form"));
-        // final WebElement userName = form.findElement(By.name("correo"));
-        // final WebElement password = form.findElement(By.name("clave"));
-        // final WebElement submitButton = form.findElement(By.id("tps_login_button"));
-        // // INGRESO
-        // userName.sendKeys(input.getUserName());
-        // password.sendKeys(input.getPassword());
-        // submitButton.submit();
-        // }
+                Wait<WebDriver> wait = new WebDriverWait(driver,
+                                Duration.ofSeconds(input.getTimeout()));
+
+                try {
+                        final By form_path = By.id("kc-form");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
+                        // INGRESO
+                        final WebElement form = driver.findElement(form_path);
+                        final WebElement userName = form.findElement(By.name("username"));
+                        final WebElement password = form.findElement(By.name("password"));
+                        final WebElement submitButton = form.findElement(By.name("login"));
+                        // INGRESO
+                        userName.sendKeys(input.getUserName());
+                        password.sendKeys(input.getPassword());
+                        submitButton.submit();
+
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
+                }
+
+                try {
+                        driver.get(input.getUrl() + "/documentary-contingency/micdta");
+                        final By ship_path = By.xpath("//app-seeker[@controlname='ship']/p-autocomplete/span/input");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(ship_path));
+                        final WebElement ship = driver.findElement(ship_path);
+                        ship.sendKeys(input.getPayload().getShip());
+                        final By ship_select_path = By
+                                        .xpath("//span[contains(text(),'" + input.getPayload().getShip() + "')]");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(ship_select_path));
+                        final WebElement ship_select = driver.findElement(ship_select_path);
+                        ship_select.click();
+
+                        final WebElement custom = driver.findElement(
+                                        By.xpath("//app-seeker[@controlname='custom']/p-autocomplete/span/input"));
+                        custom.sendKeys(input.getPayload().getCustom());
+
+                        final By custom_select_path = By
+                                        .xpath("//span[contains(text(),'" + input.getPayload().getCustom() + "')]");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(custom_select_path));
+                        final WebElement custom_select = driver.findElement(custom_select_path);
+                        custom_select.click();
+
+                        final WebElement micdta = driver
+                                        .findElement(By.xpath("//input[@formcontrolname='documentNumber']"));
+
+                        micdta.sendKeys(input.getPayload().getMicdta());
+
+                        final WebElement booking = driver
+                                        .findElement(By.xpath("//input[@formcontrolname='booking']"));
+                        booking.sendKeys(input.getPayload().getBooking());
+
+                        final WebElement country = driver.findElement(
+                                        By.xpath("//app-seeker[@controlname='driverCountry']/p-autocomplete/span/input"));
+                        country.sendKeys(input.getPayload().getCountry());
+
+                        final By country_select_path = By
+                                        .xpath("//span[contains(text(),'" + input.getPayload().getCountry() + "')]");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(country_select_path));
+                        final WebElement country_select = driver.findElement(country_select_path);
+                        country_select.click();
+
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(country_select_path));
+
+                        final WebElement dni = driver
+                                        .findElement(By.xpath("//input[@formcontrolname='driverIdentifier']"));
+                        dni.sendKeys(input.getPayload().getDni());
+
+                        final WebElement plate_country = driver.findElement(
+                                        By.xpath("//app-seeker[@controlname='plateCountry']/p-autocomplete/span/input"));
+                        plate_country.sendKeys(input.getPayload().getCountry());
+
+                        final By plate_country_select_path = By
+                                        .xpath("//span[contains(text(),'" + input.getPayload().getCountry() + "')]");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(plate_country_select_path));
+                        final WebElement plate_country_select = driver.findElement(plate_country_select_path);
+                        plate_country_select.click();
+
+                        final WebElement plateNumber = driver
+                                        .findElement(By.xpath("//input[@formcontrolname='plateIdentifier']"));
+                        plateNumber.sendKeys(input.getPayload().getPlateNumber());
+
+                        final WebElement button = driver.findElement(By.xpath("//span[text()='Agregar Carga']"));
+                        button.click();
+
+                        final WebElement cargo_type = driver
+                                        .findElement(By.xpath("//p-dropdown[@formcontrolname='cargoType']"));
+                        cargo_type.click();
+
+                        final By cargo_type_select_path = By
+                                        .xpath("//span[contains(text(),'CONTENEDORIZADA')]");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(cargo_type_select_path));
+                        final WebElement cargo_type_select = driver
+                                        .findElement(cargo_type_select_path);
+                        cargo_type_select.click();
+
+                        final WebElement container_type = driver
+                                        .findElement(By.xpath("//p-dropdown[@formcontrolname='packType']"));
+                        container_type.click();
+
+                        final By container_type_select_path = By
+                                        .xpath("//span[contains(text(),'" + input.getPayload().getContainerType()
+                                                        + "')]");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(container_type_select_path));
+                        final WebElement container_type_select = driver
+                                        .findElement(container_type_select_path);
+                        container_type_select.click();
+
+                        final WebElement container = driver
+                                        .findElement(By.xpath("//input[@formcontrolname='cargoNumber']"));
+
+                        final String contenedor = input.getPayload().getContainer().substring(0, 10);
+                        final String digito = input.getPayload().getContainer().substring(10, 11);
+                        container.sendKeys(contenedor + "-" + digito);
+
+                        final WebElement amount = driver
+                                        .findElement(By.xpath("//input[@formcontrolname='amount']"));
+                        amount.sendKeys("1");
+
+                        final WebElement confirm_button = driver
+                                        .findElement(By.xpath(
+                                                        "//div[@class='micdta-item-dialog-buttons']/button[text()='Guardar']"));
+
+                        confirm_button.click();
+
+                        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.xpath("//p-dynamicdialog")));
+
+                        final WebElement header_checkbox = driver
+                                        .findElement(By.xpath(
+                                                        "// p-tableheadercheckbox"));
+                        header_checkbox.click();
+
+                        if (input.isEnd()) {
+                                final WebElement end_button = driver
+                                                .findElement(By.xpath("//span[text()='Inyectar MICDTA']"));
+                                end_button.click();
+                                wait.until(ExpectedConditions
+                                                .visibilityOfElementLocated(By.xpath("//p-dynamicdialog")));
+                        }
+
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.ERROR, e);
+                }
+
+        }
+
+        private static void tps(WebDriver driver, Input input) throws WebScrapperException, Exception {
+                Wait<WebDriver> wait = new WebDriverWait(driver,
+                                Duration.ofSeconds(input.getTimeout()));
+
+                try {
+                        final By form_path = By.id("tps_login_form");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
+                        final WebElement form = driver.findElement(form_path);
+                        final WebElement userName = form.findElement(By.name("correo"));
+                        final WebElement password = form.findElement(By.name("clave"));
+                        final WebElement submitButton = form.findElement(By.id("tps_login_button"));
+                        // INGRESO
+                        userName.sendKeys(input.getUserName());
+                        password.sendKeys(input.getPassword());
+                        submitButton.submit();
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
+                }
+
+                try {
+                        final By carga_extranjera_radio_path = By.xpath("//span[text()='CARGA EXTRANJERA']");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(carga_extranjera_radio_path));
+                        final WebElement carga_extranjera_radio = driver.findElement(carga_extranjera_radio_path);
+                        carga_extranjera_radio.click();
+
+                        final WebElement booking = driver.findElement(By.id("booking_1"));
+                        booking.sendKeys(input.getPayload().getBooking());
+
+                        final WebElement booking_btn = driver
+                                        .findElement(By.xpath("//button[@data-id-input='booking_1']"));
+                        booking_btn.click();
+
+                        Thread.sleep(100000);
+                        // CARGA EXTRANJERA
+
+                } catch (TimeoutException e) {
+                        throw new WebScrapperException(WebScrapperMessage.ERROR, e);
+                }
+
+        }
 }
