@@ -24,7 +24,7 @@ public class Payload {
     private String plateNumberCountry;
 
     // CONTENEDOR
-    private String dispatcherRut;
+    private String dispatcher;
     private String clientRut;
     private String weight;
     private String vgmWeight;

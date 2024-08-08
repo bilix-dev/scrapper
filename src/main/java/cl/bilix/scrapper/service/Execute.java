@@ -173,7 +173,7 @@ public class Execute {
                         final WebElement truckingExport = driver
                                         .findElement(By.name("truckingExport"));
 
-                        truckingExport.sendKeys(input.getPayload().getDispatcherRut());
+                        truckingExport.sendKeys(input.getPayload().getDispatcher());
                         truckingExport.sendKeys(Keys.ENTER);
 
                         final WebElement security = driver.findElement(By.name("uniqueInvoice"));
