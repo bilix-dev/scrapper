@@ -34,4 +34,9 @@ public class Payload {
     private String ship;
     private String custom;
     private String containerType;
+    private String vgmWeightVerifier;
+    private String weightChargeOnly;
+    private String isoCode;
+    private String numCartaPorte;
+    private String consignee;
 }
