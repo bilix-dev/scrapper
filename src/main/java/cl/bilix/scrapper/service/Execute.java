@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -16,6 +17,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -206,10 +208,10 @@ public class Execute {
                 JavascriptExecutor js = (JavascriptExecutor) driver;
 
                 try {
-                        final By form_path = By.name("formulario");
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
+                        final By user_path = By.name("userd");
+                        wait.until(ExpectedConditions.elementToBeClickable(user_path));
                         // INGRESO
-                        final WebElement form = driver.findElement(form_path);
+                        final WebElement form = driver.findElement(By.name("formulario"));
                         final WebElement userName = form.findElement(By.name("userd"));
                         final WebElement password = form.findElement(By.name("pass"));
                         final WebElement submitButton = form.findElement(By.name("accion2"));
@@ -286,7 +288,7 @@ public class Execute {
                         js.executeScript("arguments[0].click();", cnt_guardar);
 
                         final By peso_neto_path = By.id("peso_neto");
-                        wait.until(ExpectedConditions.visibilityOfElementLocated(peso_neto_path));
+                        wait.until(ExpectedConditions.elementToBeClickable(peso_neto_path));
 
                         final WebElement peso_neto = driver.findElement(peso_neto_path);
                         peso_neto.sendKeys(input.getPayload().getWeight());
@@ -330,6 +332,9 @@ public class Execute {
                                         .findElement(By.xpath("//div[@class='facturacion_visa_expo_body']/button"));
                         js.executeScript("arguments[0].click();", rut_btn);
 
+                        // Espera a que se llene el rut
+                        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
+
                         final WebElement checkverificado = driver.findElement(By.id("checkverificado"));
                         js.executeScript("arguments[0].click();", checkverificado);
                         ;
@@ -343,12 +348,13 @@ public class Execute {
                         final WebElement flg_emp_pesa_extranjera = driver.findElement(By.id("flg_emp_pesa_extranjera"));
                         js.executeScript("arguments[0].click();", flg_emp_pesa_extranjera);
 
-                        final WebElement nombre_empresa_pesaje = driver.findElement(By.id("nombre_empresa_pesaje"));
-                        nombre_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
+                        // Llenalo solo si puede
+                        try {
+                                final WebElement rep_empresa_pesaje = driver.findElement(By.id("rep_empresa_pesaje"));
+                                rep_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
 
-                        final WebElement rep_empresa_pesaje = driver.findElement(By.id("rep_empresa_pesaje"));
-                        rep_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
-
+                        } catch (Exception e) {
+                        }
                         final WebElement checkacepto = driver.findElement(By.id("checkacepto"));
                         js.executeScript("arguments[0].click();", checkacepto);
 
@@ -386,6 +392,15 @@ public class Execute {
                 }
 
                 try {
+                        try {
+                                Wait<WebDriver> w = new FluentWait<>(driver)
+                                                .withTimeout(Duration.ofSeconds(5));
+                                By dialog_path = By.xpath("//div[@role='dialog']");
+                                w.until(ExpectedConditions
+                                                .visibilityOfElementLocated(dialog_path));
+                        } catch (Exception e) {
+                        }
+
                         driver.get(input.getUrl() + "/documentary-contingency/micdta");
                         final By ship_path = By.xpath("//app-seeker[@controlname='ship']/p-autocomplete/span/input");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(ship_path));
@@ -493,7 +508,7 @@ public class Execute {
 
                         final WebElement header_checkbox = driver
                                         .findElement(By.xpath(
-                                                        "// p-tableheadercheckbox"));
+                                                        "//p-tableheadercheckbox"));
                         header_checkbox.click();
 
                         if (input.isEnd()) {
@@ -503,7 +518,6 @@ public class Execute {
                                 wait.until(ExpectedConditions
                                                 .visibilityOfElementLocated(By.xpath("//p-dynamicdialog")));
                         }
-
                 } catch (TimeoutException e) {
                         throw new WebScrapperException(WebScrapperMessage.ERROR, e);
                 }
@@ -514,6 +528,7 @@ public class Execute {
                 Wait<WebDriver> wait = new WebDriverWait(driver,
                                 Duration.ofSeconds(input.getTimeout()));
 
+                JavascriptExecutor js = (JavascriptExecutor) driver;
                 try {
                         final By form_path = By.id("tps_login_form");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
@@ -530,6 +545,30 @@ public class Execute {
                 }
 
                 try {
+
+                        try {
+                                Wait<WebDriver> w = new FluentWait<>(driver)
+                                                .withTimeout(Duration.ofSeconds(2));
+                                final By modal_button_path = By.className("fancybox-close-small");
+                                w.until(ExpectedConditions
+                                                .visibilityOfElementLocated(
+                                                                modal_button_path));
+                                final WebElement modal_button = driver
+                                                .findElement(modal_button_path);
+                                modal_button.click();
+                        } catch (Exception e) {
+                                // No existe el modal
+                        }
+
+                        // driver.get("https://portalweb.tps.cl/tps_online/transaccional/tramites/");
+                        // final By tramites_table_path = By.id("tramites_tbl");
+                        // wait.until(ExpectedConditions.visibilityOfElementLocated(tramites_table_path));
+                        // Thread.sleep(2000);
+                        // WebElement table = driver.findElement(tramites_table_path);
+                        // List<WebElement> rows = table.findElements(By.tagName("tr"));
+                        // List<WebElement> cols = rows.get(1).findElements(By.tagName("td"));
+                        // cols.getLast().findElement(By.tagName("a")).click();
+
                         final By carga_extranjera_radio_path = By.xpath("//span[text()='CARGA EXTRANJERA']");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(carga_extranjera_radio_path));
                         final WebElement carga_extranjera_radio = driver.findElement(carga_extranjera_radio_path);
@@ -542,12 +581,183 @@ public class Execute {
                                         .findElement(By.xpath("//button[@data-id-input='booking_1']"));
                         booking_btn.click();
 
-                        Thread.sleep(100000);
-                        // CARGA EXTRANJERA
+                        // // Camino ya carge el documento
+                        // try {
+                        // final By doc_aduanero_path = By.id("numero_doc_aduanero");
+                        // wait.until(ExpectedConditions.visibilityOfElementLocated(doc_aduanero_path));
 
+                        // final WebElement doc_aduanero_select = driver.findElement(doc_aduanero_path);
+                        // final Select select = new Select(doc_aduanero_select);
+                        // select.selectByValue(input.getPayload().getMicdta());
+
+                        // //
+                        // final By btn_procesa_desasociar_din_path =
+                        // By.id("btn_procesa_desasociar_din");
+                        // Wait<WebDriver> w = new FluentWait<>(driver)
+                        // .withTimeout(Duration.ofSeconds(2));
+                        // w.until(ExpectedConditions.visibilityOfElementLocated(btn_procesa_desasociar_din_path));
+
+                        // final WebElement btn_procesa_desasociar_din = driver
+                        // .findElement(btn_procesa_desasociar_din_path);
+                        // btn_procesa_desasociar_din.click();
+                        // //
+
+                        // final By container_select_path = By.id("tps_expo_container");
+                        // final WebElement container_select =
+                        // driver.findElement(container_select_path);
+
+                        // final Select selectc = new Select(container_select);
+                        // selectc.selectByValue(input.getPayload().getContainer());
+
+                        // } catch (Exception e) {
+                        // final By doc_aduanero_path = By.id("numero_doc_aduanero");
+                        // wait.until(ExpectedConditions.visibilityOfElementLocated(doc_aduanero_path));
+                        // final WebElement doc_aduanero = driver.findElement(doc_aduanero_path);
+                        // doc_aduanero.sendKeys(input.getPayload().getMicdta());
+
+                        // final By container_select_path = By.id("tps_expo_container");
+                        // final WebElement container_select =
+                        // driver.findElement(container_select_path);
+
+                        // final Select select = new Select(container_select);
+                        // select.selectByValue("manual");
+
+                        // final WebElement container_input =
+                        // driver.findElement(By.id("num_container_manual"));
+                        // container_input.sendKeys(input.getPayload().getContainer());
+                        // }
+
+                        final By doc_aduanero_path = By.id("numero_doc_aduanero");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(doc_aduanero_path));
+                        final WebElement doc_aduanero = driver.findElement(doc_aduanero_path);
+                        doc_aduanero.sendKeys(input.getPayload().getMicdta());
+
+                        final By container_select_path = By.id("tps_expo_container");
+                        final WebElement container_select = driver.findElement(container_select_path);
+
+                        final Select select = new Select(container_select);
+                        select.selectByValue("manual");
+
+                        final WebElement container_input = driver.findElement(By.id("num_container_manual"));
+                        container_input.sendKeys(input.getPayload().getContainer());
+
+                        final By container_type_select_path = By.id("tps_expo_iso");
+                        final WebElement container_type_select = driver.findElement(container_type_select_path);
+
+                        final Select select_type = new Select(container_type_select);
+                        // select_type.selectByValue(input.getPayload().getIsoCode());
+                        select_type.selectByIndex(1);
+
+                        final WebElement next_button = driver.findElement(By.id("tps_next"));
+                        next_button.click();
+
+                        final By netWght_path = By.id("netWght");
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(netWght_path));
+                        final WebElement netWght = driver.findElement(netWght_path);
+                        netWght.sendKeys(input.getPayload().getWeightChargeOnly());
+
+                        final WebElement consignatario_manual = driver.findElement(By.id("consignatario_manual"));
+                        consignatario_manual.sendKeys(input.getPayload().getConsignee());
+
+                        final WebElement carta_porte_manual = driver.findElement(By.id("carta_porte_manual"));
+                        carta_porte_manual.sendKeys(input.getPayload().getNumCartaPorte());
+
+                        final WebElement tipoDocId_select = driver.findElement(By.id("tipoDocId"));
+
+                        final Select tipoDocId = new Select(tipoDocId_select);
+                        // NO DISTINGUE, SIEMPRE ES DNI
+                        // tipoDocId.selectByValue(input.getPayload().isForeign() ? "2" : "1");
+                        tipoDocId.selectByValue("2");
+
+                        String[] names = input.getPayload().getChoferName().split(" ");
+
+                        final WebElement trkDNombre = driver.findElement(By.id("trkDNombre"));
+                        trkDNombre.sendKeys(names[0]);
+
+                        final WebElement trkDAp1 = driver.findElement(By.id("trkDAp1"));
+                        trkDAp1.sendKeys(names[1]);
+
+                        final WebElement trkDRut = driver.findElement(By.id("trkDRut"));
+                        trkDRut.sendKeys(input.getPayload().getDni());
+
+                        final WebElement trkLicense = driver.findElement(By.id("trkLicense"));
+                        trkLicense.sendKeys(input.getPayload().getPlateNumber());
+
+                        final WebElement tps_next = driver.findElement(By.id("tps_next"));
+                        tps_next.click();
+
+                        final By radio_1_path = By.id("radio1");
+                        wait.until(ExpectedConditions.presenceOfElementLocated(radio_1_path));
+                        final WebElement radio_1 = driver.findElement(radio_1_path);
+
+                        js.executeScript("arguments[0].click();",
+                                        radio_1);
+
+                        final WebElement vgm_weight = driver.findElement(By.id("vgm_weight"));
+                        vgm_weight.sendKeys(input.getPayload().getVgmWeight());
+
+                        final WebElement vgm_verifer = driver.findElement(By.id("vgm_verifer"));
+                        vgm_verifer.sendKeys(input.getPayload().getVgmWeightVerifier());
+
+                        final WebElement vgm_declare = driver.findElement(By.id("vgm_declare"));
+                        js.executeScript("arguments[0].click();",
+                                        vgm_declare);
+
+                        By tps_add_cont_path = By.id("tps_add_cont");
+
+                        wait.until(ExpectedConditions.elementToBeClickable(tps_add_cont_path));
+
+                        final WebElement tps_add_cont = driver.findElement(tps_add_cont_path);
+                        tps_add_cont.click();
+
+                        final WebElement tps_sello_1 = driver.findElement(By.id("tps_sello_1"))
+                                        .findElement(By.tagName("input"));
+
+                        tps_sello_1.sendKeys(input.getPayload().getSealLine());
+
+                        final WebElement tps_sello_2 = driver.findElement(By.id("tps_sello_2"))
+                                        .findElement(By.tagName("input"));
+
+                        tps_sello_2.sendKeys(input.getPayload().getSeal());
+
+                        final WebElement select_sello_2 = driver.findElement(By.id("select_sello_2"));
+
+                        final Select select_seal = new Select(select_sello_2);
+                        select_seal.selectByValue("Aduana");
+
+                        // SOLO SI ES REEFER
+                        try {
+                                Wait<WebDriver> w = new FluentWait<>(driver)
+                                                .withTimeout(Duration.ofSeconds(1));
+                                w.until(ExpectedConditions.visibilityOfElementLocated(By.id("reefer_section")));
+                                final WebElement reefer_tipo_refri = driver.findElement(By.id("reefer_tipo_refri"));
+                                final Select reefer_tipo_refri_select = new Select(reefer_tipo_refri);
+                                reefer_tipo_refri_select.selectByVisibleText("STANDARD");
+
+                                final WebElement reefer_temp_declarada = driver
+                                                .findElement(By.id("reefer_temp_declarada"));
+
+                                System.out.println(reefer_temp_declarada.getAttribute("value"));
+
+                                int t = Integer.parseInt(reefer_temp_declarada.getAttribute("value"));
+
+                                final WebElement reefer_tipo_carga = driver.findElement(By.id("reefer_tipo_carga"));
+                                final Select reefer_tipo_carga_select = new Select(reefer_tipo_carga);
+                                if (t >= 0) {
+                                        reefer_tipo_carga_select.selectByVisibleText("WINE");
+                                } else {
+                                        reefer_tipo_carga_select.selectByVisibleText("FROZEN");
+                                }
+                        } catch (Exception e) {
+                        }
+                        if (input.isEnd()) {
+                                final WebElement step_3_submit = driver.findElement(By.id("step_3_submit"));
+                                step_3_submit.click();
+                                wait.until(ExpectedConditions
+                                                .visibilityOfElementLocated(By.id("modal_style_con_pago")));
+                        }
                 } catch (TimeoutException e) {
                         throw new WebScrapperException(WebScrapperMessage.ERROR, e);
                 }
-
         }
 }

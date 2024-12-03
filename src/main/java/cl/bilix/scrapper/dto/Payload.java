@@ -39,4 +39,8 @@ public class Payload {
     private String isoCode;
     private String numCartaPorte;
     private String consignee;
+    private String sealLine;
+    private String choferName;
+
+    private boolean foreign;
 }
