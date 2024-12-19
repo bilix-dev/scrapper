@@ -93,7 +93,8 @@
     			<version>2.2</version>
     			<configuration>
 					<update>true</update>
-        			<url>https://bilix.ddns.net:8443/manager/text</url>
+        			<!-- <url>https://bilix.ddns.net:8443/manager/text</url> -->
+					<url>https://sistema.valcomex.cl:8443/manager/text</url>
         			<path>/${project.artifactId}</path>
 					<username>manager</username>
 					<password>canario321ab?</password>

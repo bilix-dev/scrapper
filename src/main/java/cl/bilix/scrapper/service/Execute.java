@@ -5,12 +5,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
+import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -184,10 +187,17 @@ public class Execute {
                                         .findElement(By.xpath("//button[@ng-click='openVGMModal()']"));
                         js.executeScript("arguments[0].click();", prealert);
 
+                        // try {
+                        // final WebElement checkReefer = driver.findElement(By.name("confirmReefer"));
+                        // checkReefer.click();
+                        // } catch (Exception e) {
+                        // }
+
                         // FINALIZAR PROCESO
                         if (input.isEnd()) {
                                 final By end_path = By.id("aceptModal");
                                 wait.until(ExpectedConditions.visibilityOfElementLocated(end_path));
+
                                 final WebElement end = driver.findElement(end_path);
                                 js.executeScript("arguments[0].click();", end);
                                 wait_modal
@@ -326,13 +336,14 @@ public class Execute {
                                         .substring(input.getPayload().getClientRut().length() - 1);
 
                         rut_factura.sendKeys(rut + "-" + dv);
-
                         final WebElement rut_btn = driver
-                                        .findElement(By.xpath("//div[@class='facturacion_visa_expo_body']/button"));
+                                        .findElement(By.xpath(
+                                                        "//div[@class='facturacion_visa_expo_body']/button"));
                         js.executeScript("arguments[0].click();", rut_btn);
 
-                        // Espera a que se llene el rut
-                        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(3));
+                        final By nombre_factura = By.id("nombre_factura");
+
+                        wait.until(ExpectedConditions.visibilityOfElementLocated(nombre_factura));
 
                         final WebElement checkverificado = driver.findElement(By.id("checkverificado"));
                         js.executeScript("arguments[0].click();", checkverificado);
@@ -349,9 +360,12 @@ public class Execute {
 
                         // Llenalo solo si puede
                         try {
+                                final WebElement nombre_empresa_pesaje = driver
+                                                .findElement(By.id("nombre_empresa_pesaje"));
+                                nombre_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
+
                                 final WebElement rep_empresa_pesaje = driver.findElement(By.id("rep_empresa_pesaje"));
                                 rep_empresa_pesaje.sendKeys(input.getPayload().getBusinessName());
-
                         } catch (Exception e) {
                         }
                         final WebElement checkacepto = driver.findElement(By.id("checkacepto"));
