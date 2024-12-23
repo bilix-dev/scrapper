@@ -5,15 +5,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.NoAlertPresentException;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.TimeoutException;
-import org.openqa.selenium.UnhandledAlertException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -61,7 +58,7 @@ public class Execute {
                                 Duration.ofSeconds(input.getTimeout()));
 
                 Wait<WebDriver> wait_modal = new WebDriverWait(driver,
-                                Duration.ofSeconds(60));
+                                Duration.ofSeconds(180));
 
                 final WebElement form = driver.findElement(By.name("loginForm"));
 
@@ -200,9 +197,9 @@ public class Execute {
 
                                 final WebElement end = driver.findElement(end_path);
                                 js.executeScript("arguments[0].click();", end);
-                                wait_modal
-                                                .until(ExpectedConditions.invisibilityOfElementLocated(
-                                                                By.xpath("//div[@modal-render='true']")));
+                                // wait_modal
+                                // .until(ExpectedConditions.invisibilityOfElementLocated(
+                                // By.xpath("//div[@modal-render='true']")));
                         }
                 } catch (TimeoutException e) {
                         throw new WebScrapperException(WebScrapperMessage.ERROR, e);
