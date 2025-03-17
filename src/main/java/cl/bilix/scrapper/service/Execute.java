@@ -246,8 +246,7 @@ public class Execute {
                         buscar.submit();
 
                         final By nav_path = By
-                                        .xpath("//td[contains(text(),'" + input.getPayload().getOperation()
-                                                        + "')]/./..");
+                                        .xpath("//td[text()='" + input.getPayload().getOperation() + "']/./..");
 
                         wait.until(ExpectedConditions.visibilityOfElementLocated(nav_path));
                         // INGRESO
