@@ -30,8 +30,9 @@ public class Execute {
         public static String apply(Input input) throws WebScrapperException, Exception {
                 ChromeOptions options = new ChromeOptions();
                 if (input.isHeadless()) {
-                        options.addArguments("--headless");
+                        options.addArguments("--headless=new");
                 }
+                options.addArguments("window-size=2560,1440");
                 WebDriver driver = new ChromeDriver(options);
                 try {
                         driver.get(input.getUrl());
