@@ -26,6 +26,11 @@ import cl.bilix.scrapper.helpers.Terminal;
 import cl.bilix.scrapper.helpers.WebScrapperException;
 import cl.bilix.scrapper.helpers.WebScrapperMessage;
 
+@FunctionalInterface
+interface Operation {
+        void retry(WebDriver a, Input b) throws Exception, WebScrapperException;
+}
+
 public class Execute {
         public static String apply(Input input) throws WebScrapperException, Exception {
                 ChromeOptions options = new ChromeOptions();
@@ -35,12 +40,11 @@ public class Execute {
                 options.addArguments("window-size=2560,1440");
                 WebDriver driver = new ChromeDriver(options);
                 try {
-                        driver.get(input.getUrl());
                         switch (input.getTerminal()) {
-                                case Terminal.PC -> pc(driver, input);
-                                case Terminal.STI -> sti(driver, input);
-                                case Terminal.SILOGPORT -> silogport(driver, input);
-                                case Terminal.TPS -> tps(driver, input);
+                                case Terminal.PC -> retry(Execute::pc, driver, input, 1);
+                                case Terminal.STI -> retry(Execute::sti, driver, input, 1);
+                                case Terminal.SILOGPORT -> retry(Execute::silogport, driver, input, 1);
+                                case Terminal.TPS -> retry(Execute::tps, driver, input, 2);
                                 default -> throw new WebScrapperException(WebScrapperMessage.UNINMPLEMENTED);
                         }
                         ;
@@ -48,6 +52,20 @@ public class Execute {
                 } finally {
                         driver.quit();
                 }
+        }
+
+        private static void retry(Operation op, WebDriver driver, Input input, int attempts)
+                        throws WebScrapperException, Exception {
+                do {
+                        try {
+                                op.retry(driver, input);
+                                attempts = 0;
+                        } catch (Exception e) {
+                                attempts--;
+                                if (attempts == 0)
+                                        throw e;
+                        }
+                } while (attempts > 0);
         }
 
         private static void pc(WebDriver driver, Input input)
@@ -61,6 +79,7 @@ public class Execute {
                 Wait<WebDriver> wait_modal = new WebDriverWait(driver,
                                 Duration.ofSeconds(180));
 
+                driver.get(input.getUrl());
                 final WebElement form = driver.findElement(By.name("loginForm"));
 
                 final WebElement userName = form.findElement(By.name("username"));
@@ -213,7 +232,7 @@ public class Execute {
                                 Duration.ofSeconds(input.getTimeout()));
 
                 JavascriptExecutor js = (JavascriptExecutor) driver;
-
+                driver.get(input.getUrl());
                 try {
                         final By user_path = By.name("userd");
                         wait.until(ExpectedConditions.elementToBeClickable(user_path));
@@ -384,6 +403,7 @@ public class Execute {
                 Wait<WebDriver> wait = new WebDriverWait(driver,
                                 Duration.ofSeconds(input.getTimeout()));
 
+                driver.get(input.getUrl());
                 try {
                         final By form_path = By.id("kc-form");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
@@ -539,6 +559,7 @@ public class Execute {
                                 Duration.ofSeconds(input.getTimeout()));
 
                 JavascriptExecutor js = (JavascriptExecutor) driver;
+                driver.get(input.getUrl());
                 try {
                         final By form_path = By.id("tps_login_form");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
@@ -591,65 +612,50 @@ public class Execute {
                                         .findElement(By.xpath("//button[@data-id-input='booking_1']"));
                         booking_btn.click();
 
-                        // // Camino ya carge el documento
-                        // try {
-                        // final By doc_aduanero_path = By.id("numero_doc_aduanero");
-                        // wait.until(ExpectedConditions.visibilityOfElementLocated(doc_aduanero_path));
-
-                        // final WebElement doc_aduanero_select = driver.findElement(doc_aduanero_path);
-                        // final Select select = new Select(doc_aduanero_select);
-                        // select.selectByValue(input.getPayload().getMicdta());
-
-                        // //
-                        // final By btn_procesa_desasociar_din_path =
-                        // By.id("btn_procesa_desasociar_din");
-                        // Wait<WebDriver> w = new FluentWait<>(driver)
-                        // .withTimeout(Duration.ofSeconds(2));
-                        // w.until(ExpectedConditions.visibilityOfElementLocated(btn_procesa_desasociar_din_path));
-
-                        // final WebElement btn_procesa_desasociar_din = driver
-                        // .findElement(btn_procesa_desasociar_din_path);
-                        // btn_procesa_desasociar_din.click();
-                        // //
-
-                        // final By container_select_path = By.id("tps_expo_container");
-                        // final WebElement container_select =
-                        // driver.findElement(container_select_path);
-
-                        // final Select selectc = new Select(container_select);
-                        // selectc.selectByValue(input.getPayload().getContainer());
-
-                        // } catch (Exception e) {
-                        // final By doc_aduanero_path = By.id("numero_doc_aduanero");
-                        // wait.until(ExpectedConditions.visibilityOfElementLocated(doc_aduanero_path));
-                        // final WebElement doc_aduanero = driver.findElement(doc_aduanero_path);
-                        // doc_aduanero.sendKeys(input.getPayload().getMicdta());
-
-                        // final By container_select_path = By.id("tps_expo_container");
-                        // final WebElement container_select =
-                        // driver.findElement(container_select_path);
-
-                        // final Select select = new Select(container_select);
-                        // select.selectByValue("manual");
-
-                        // final WebElement container_input =
-                        // driver.findElement(By.id("num_container_manual"));
-                        // container_input.sendKeys(input.getPayload().getContainer());
-                        // }
-
+                        // Cambio Paradigma
                         final By doc_aduanero_path = By.id("numero_doc_aduanero");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(doc_aduanero_path));
-                        final WebElement doc_aduanero = driver.findElement(doc_aduanero_path);
-                        doc_aduanero.sendKeys(input.getPayload().getMicdta());
+                        final WebElement doc_aduanero_select = driver.findElement(doc_aduanero_path);
+
+                        try {
+                                final Select select = new Select(doc_aduanero_select);
+                                select.selectByValue(input.getPayload().getMicdta());
+                                // Carga Manual
+                        } catch (Exception e) {
+                                try {
+                                        final Select select = new Select(doc_aduanero_select);
+                                        select.selectByValue("MANUAL_MIC");
+                                        final By num_mic_manual_path = By.id("num_mic_manual");
+                                        final WebElement num_mic_manual = driver.findElement(num_mic_manual_path);
+                                        num_mic_manual.sendKeys(input.getPayload().getMicdta());
+                                } catch (Exception e2) {
+                                        doc_aduanero_select.sendKeys(input.getPayload().getMicdta());
+                                }
+                        }
+
+                        try {
+                                final By btn_procesa_desasociar_din_path = By.id("btn_procesa_desasociar_din");
+                                Wait<WebDriver> w = new FluentWait<>(driver)
+                                                .withTimeout(Duration.ofSeconds(2));
+                                w.until(ExpectedConditions.visibilityOfElementLocated(btn_procesa_desasociar_din_path));
+
+                                final WebElement btn_procesa_desasociar_din = driver
+                                                .findElement(btn_procesa_desasociar_din_path);
+                                btn_procesa_desasociar_din.click();
+                        } catch (Exception e) {
+
+                        }
 
                         final By container_select_path = By.id("tps_expo_container");
                         final WebElement container_select = driver.findElement(container_select_path);
-
-                        final Select select = new Select(container_select);
-                        select.selectByValue("manual");
-
-                        final WebElement container_input = driver.findElement(By.id("num_container_manual"));
-                        container_input.sendKeys(input.getPayload().getContainer());
+                        final Select selectc = new Select(container_select);
+                        try {
+                                selectc.selectByValue(input.getPayload().getContainer());
+                        } catch (Exception e) {
+                                selectc.selectByValue("manual");
+                                final WebElement container_input = driver.findElement(By.id("num_container_manual"));
+                                container_input.sendKeys(input.getPayload().getContainer());
+                        }
 
                         final By container_type_select_path = By.id("tps_expo_iso");
                         final WebElement container_type_select = driver.findElement(container_type_select_path);
