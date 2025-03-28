@@ -33,39 +33,41 @@ interface Operation {
 
 public class Execute {
         public static String apply(Input input) throws WebScrapperException, Exception {
+                String screenshot = switch (input.getTerminal()) {
+                        case Terminal.PC -> retry(Execute::pc, input, 1);
+                        case Terminal.STI -> retry(Execute::sti, input, 1);
+                        case Terminal.SILOGPORT -> retry(Execute::silogport, input, 1);
+                        case Terminal.TPS -> retry(Execute::tps, input, 2);
+                        default -> throw new WebScrapperException(WebScrapperMessage.UNINMPLEMENTED);
+                };
+                return screenshot;
+        }
+
+        private static String retry(Operation op, Input input, int attempts)
+                        throws WebScrapperException, Exception {
+
                 ChromeOptions options = new ChromeOptions();
                 if (input.isHeadless()) {
                         options.addArguments("--headless=new");
                 }
                 options.addArguments("window-size=2560,1440");
-                WebDriver driver = new ChromeDriver(options);
-                try {
-                        switch (input.getTerminal()) {
-                                case Terminal.PC -> retry(Execute::pc, driver, input, 1);
-                                case Terminal.STI -> retry(Execute::sti, driver, input, 1);
-                                case Terminal.SILOGPORT -> retry(Execute::silogport, driver, input, 1);
-                                case Terminal.TPS -> retry(Execute::tps, driver, input, 2);
-                                default -> throw new WebScrapperException(WebScrapperMessage.UNINMPLEMENTED);
-                        }
-                        ;
-                        return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
-                } finally {
-                        driver.quit();
-                }
-        }
-
-        private static void retry(Operation op, WebDriver driver, Input input, int attempts)
-                        throws WebScrapperException, Exception {
+                WebDriver driver = null;
                 do {
                         try {
+                                driver = new ChromeDriver(options);
+                                driver.get(input.getUrl());
                                 op.retry(driver, input);
-                                attempts = 0;
+                                return ((TakesScreenshot) driver).getScreenshotAs(OutputType.BASE64);
                         } catch (Exception e) {
                                 attempts--;
                                 if (attempts == 0)
                                         throw e;
+                        } finally {
+                                if (driver != null)
+                                        driver.quit();
                         }
                 } while (attempts > 0);
+                return null;
         }
 
         private static void pc(WebDriver driver, Input input)
@@ -79,7 +81,6 @@ public class Execute {
                 Wait<WebDriver> wait_modal = new WebDriverWait(driver,
                                 Duration.ofSeconds(180));
 
-                driver.get(input.getUrl());
                 final WebElement form = driver.findElement(By.name("loginForm"));
 
                 final WebElement userName = form.findElement(By.name("username"));
@@ -232,7 +233,6 @@ public class Execute {
                                 Duration.ofSeconds(input.getTimeout()));
 
                 JavascriptExecutor js = (JavascriptExecutor) driver;
-                driver.get(input.getUrl());
                 try {
                         final By user_path = By.name("userd");
                         wait.until(ExpectedConditions.elementToBeClickable(user_path));
@@ -403,7 +403,6 @@ public class Execute {
                 Wait<WebDriver> wait = new WebDriverWait(driver,
                                 Duration.ofSeconds(input.getTimeout()));
 
-                driver.get(input.getUrl());
                 try {
                         final By form_path = By.id("kc-form");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
@@ -555,11 +554,11 @@ public class Execute {
         }
 
         private static void tps(WebDriver driver, Input input) throws WebScrapperException, Exception {
+
                 Wait<WebDriver> wait = new WebDriverWait(driver,
                                 Duration.ofSeconds(input.getTimeout()));
 
                 JavascriptExecutor js = (JavascriptExecutor) driver;
-                driver.get(input.getUrl());
                 try {
                         final By form_path = By.id("tps_login_form");
                         wait.until(ExpectedConditions.visibilityOfElementLocated(form_path));
@@ -571,6 +570,7 @@ public class Execute {
                         userName.sendKeys(input.getUserName());
                         password.sendKeys(input.getPassword());
                         submitButton.submit();
+
                 } catch (TimeoutException e) {
                         throw new WebScrapperException(WebScrapperMessage.UNAUTHORIZED, e);
                 }
