@@ -12,7 +12,7 @@
 	<artifactId>scrapper</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>scrapper</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Scrapper Valcomex</description>
 	<packaging>war</packaging>
 	<properties>
 		<java.version>21</java.version>

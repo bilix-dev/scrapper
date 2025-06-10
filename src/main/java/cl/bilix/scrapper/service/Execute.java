@@ -26,11 +26,6 @@ import cl.bilix.scrapper.helpers.Terminal;
 import cl.bilix.scrapper.helpers.WebScrapperException;
 import cl.bilix.scrapper.helpers.WebScrapperMessage;
 
-@FunctionalInterface
-interface Operation {
-        void retry(WebDriver a, Input b) throws Exception, WebScrapperException;
-}
-
 public class Execute {
         public static String apply(Input input) throws WebScrapperException, Exception {
                 String screenshot = switch (input.getTerminal()) {
@@ -329,7 +324,7 @@ public class Execute {
 
                         final WebElement type = driver.findElement(By.id("eligeDoc"));
                         Select select = new Select(type);
-                        select.getOptions().get(8).click();
+                        select.selectByValue("99");
 
                         final WebElement dw_micdta = driver.findElement(By.id("dw_dus"));
                         dw_micdta.sendKeys(input.getPayload().getMicdta());
@@ -776,4 +771,9 @@ public class Execute {
                         throw new WebScrapperException(WebScrapperMessage.ERROR, e);
                 }
         }
+}
+
+@FunctionalInterface
+interface Operation {
+        void retry(WebDriver a, Input b) throws Exception, WebScrapperException;
 }
